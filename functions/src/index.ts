@@ -7,47 +7,41 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
-import { initializeApp } from "firebase-admin";
-import { getAuth } from "firebase-admin/auth";
-import { DataSnapshot, getDatabase } from "firebase-admin/database";
-import * as functions from 'firebase-functions/v2';
-import { setGlobalOptions } from "firebase-functions";
+import * as admin from "firebase-admin";
+import { DataSnapshot } from "firebase-admin/database";
+import * as functions from "firebase-functions/v2";
 import { DatabaseEvent } from "firebase-functions/database";
 
-setGlobalOptions({ maxInstances: 10 });
-
-// import { initializeApp } from "firebase/app";
-// import { getAnalytics } from "firebase/analytics";
-// import { getAuth } from "firebase/auth";
-// import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyCOMojtP55UJrRz3t-H67wWyaPrFOHtJE0",
-    authDomain: "wasp-tronco-soft.firebaseapp.com",
-    projectId: "wasp-tronco-soft",
-    storageBucket: "wasp-tronco-soft.firebasestorage.app",
-    messagingSenderId: "890333873786",
-    appId: "1:890333873786:web:6ac7ad8906382769e1ddc3",
-    databaseURL: "https://wasp-tronco-soft-default-rtdb.firebaseio.com",
-    measurementId: "G-6TDS4VBL8Q"
+    apiKey: process.env.FIREBASE_API_KEY,
+    authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.FIREBASE_APP_ID,
+    databaseURL: process.env.FIREBASE_DATABASE_URL,
+    measurementId: process.env.FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-export const rtdb = getDatabase(app);
-export const auth = getAuth(app);
+admin.initializeApp(firebaseConfig);
 
+
+/**
+ * Database paths for triggers.
+ */
 export class Paths {
-    static onNewUser = 'users/{userId}';
+    static onNewUser = "profiles/{profileId}";
 }
 
 export interface UserPreferences {
-    language: 'pt';
+    language: "pt";
     timezone: string;
     dateFormat: string;
-    timeFormat: '12h' | '24h';
+    timeFormat: "12h" | "24h";
     currency: string;
-    theme: 'light' | 'dark' | 'system';
+    theme: "light" | "dark" | "system";
     notifications: {
         email: boolean;
         push: boolean;
@@ -109,10 +103,10 @@ export interface UserPermissions {
         };
     };
 }
-export type UserRole = 'admin' | 'gestor' | 'colaborador';
-export type Environment = 'cdoa' | 'broker' | 'client';
+export type UserRole = "admin" | "gestor" | "colaborador";
+export type Environment = "cdoa" | "broker" | "client";
 
-export type AccountStatus = 'active' | 'pending' | 'blocked';
+export type AccountStatus = "active" | "pending" | "blocked";
 
 export interface UserProfile {
     id: string;
@@ -123,8 +117,8 @@ export interface UserProfile {
     company: Company,
     type: UserRole;
     status: AccountStatus;
-    createdAt: any;
-    updatedAt: any;
+    createdAt: unknown;
+    updatedAt: unknown;
     companyRole: string;
     permissions: UserPermissions;
     preferences: UserPreferences;
@@ -138,14 +132,15 @@ export interface Company {
     phone: string;
     email: string;
     address: string;
-    createdAt: any;
+    createdAt: unknown;
 }
 
 export const onUserCreated = functions.database
-    .onValueCreated(Paths.onNewUser, async (snapshot: DatabaseEvent<DataSnapshot>) => {
+    .onValueCreated(Paths.onNewUser, async (
+        snapshot: DatabaseEvent<DataSnapshot>
+    ) => {
         // Obter os dados da transação com tipagem segura
         const userId = snapshot.params.userId;
         const user: UserProfile = snapshot.data.val();
-        functions.logger.log(`Novo usuario criado  (Usuário: ${userId})`);
-
+        functions.logger.log(`Novo usuario: ${userId}`, user);
     });
